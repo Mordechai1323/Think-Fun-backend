@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const {validateUser, UserModel, validateLogin, generateToken, validateNameAndEmail, validatePassword} = require("../models/userModel");
+const { validateUser, UserModel, validateLogin, generateToken, validateNameAndEmail, validatePassword } = require("../models/userModel");
 const { auth, authAdmin } = require("../middlewares/auth");
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.get("/allUsers", authAdmin, async (req, res) => {
     res.json(users);
   } catch (err) {
     console.log(err);
-    res.status(502).json({ err });
+    res.status(502).json(err);
   }
 });
 
@@ -27,7 +27,7 @@ router.get("/checkToken", auth, async (req, res) => {
 
 router.get("/myInfo", auth, async (req, res) => {
   try {
-    let data = await UserModel.findOne({ _id: req.tokenData._id },{ password: 0 });
+    let data = await UserModel.findOne({ _id: req.tokenData._id }, { password: 0 });
     res.json(data);
   } catch (err) {
     console.log(err);
@@ -43,7 +43,7 @@ router.get("/count", async (req, res) => {
     res.json({ count, page });
   } catch (err) {
     console.log(err);
-    res.status(502).json({ err });
+    res.status(502).json(err);
   }
 });
 
@@ -60,9 +60,7 @@ router.post("/", async (req, res) => {
     res.status(201).json(user);
   } catch (err) {
     if (err.code == 11000) {
-      return res
-        .status(401)
-        .json({ msg: "Email already in system, try log in", code: 11000 });
+      return res.status(401).json({ err: "Email already in system, try log in", code: 11000 });
     }
     console.log(err);
     res.status(502).json(err);
@@ -101,7 +99,7 @@ router.put("/", auth, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.log(err);
-    res.status(502).json({ err });
+    res.status(502).json(err);
   }
 });
 
@@ -121,7 +119,7 @@ router.put("/editPassword", auth, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.log(err);
-    res.status(502).json({ err });
+    res.status(502).json(err);
   }
 });
 
@@ -131,24 +129,23 @@ router.delete("/", auth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.log(err);
-    res.status(502).json({ err });
+    res.status(502).json(err);
   }
 });
 
+// Chang user id
 router.patch("/role", authAdmin, async (req, res) => {
   try {
     let user_id = req.query.user_id;
     let role = req.query.role;
     if (user_id == req.tokenData._id || user_id == "63d68f8b9cd6921b2d9a8588") {
-      return res
-        .status(401)
-        .json({ err: "You try to change yourself or the super admin" });
+      return res.status(401).json({ err: "You try to change yourself or the super admin" });
     }
     let data = await UserModel.updateOne({ _id: user_id }, { role });
     res.json(data);
   } catch (err) {
     console.log(err);
-    res.status(502).json({ err });
+    res.status(502).json(err);
   }
 });
 
