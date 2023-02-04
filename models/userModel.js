@@ -7,6 +7,7 @@ let userSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
+  img_url: String,
   role: {
     type: String,
     default: "user",

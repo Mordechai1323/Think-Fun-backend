@@ -2,6 +2,9 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const { validateUser, UserModel, validateLogin, generateToken, validateNameAndEmail, validatePassword } = require("../models/userModel");
 const { auth, authAdmin } = require("../middlewares/auth");
+const { StatisticModel } = require("../models/statisticModel");
+const { upload } = require("../util/uploadFile");
+const fs = require("fs");
 const router = express.Router();
 
 router.get("/allUsers", authAdmin, async (req, res) => {
@@ -48,15 +51,18 @@ router.get("/count", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  let validBody = validateUser(req.body);
+  const validBody = validateUser(req.body);
   if (validBody.error) {
     return res.status(400).json(validBody.error.details);
   }
   try {
-    let user = new UserModel(req.body);
+    const user = new UserModel(req.body);
     user.password = await bcrypt.hash(user.password, 10);
     await user.save();
     user.password = "*****";
+    const statistic = new StatisticModel();
+    statistic.user_id = user._id;
+    await statistic.save();
     res.status(201).json(user);
   } catch (err) {
     if (err.code == 11000) {
@@ -83,6 +89,19 @@ router.post("/login", async (req, res) => {
     }
     let token = generateToken(user._id, user.role);
     res.json({ token });
+  } catch (err) {
+    console.log(err);
+    res.status(502).json(err);
+  }
+});
+
+router.post("/uploadImg", auth, upload.single("image"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ err: "Please select an image to upload (JPEG or JPG or PNG only)" });
+  }
+  try {
+    let updateData = await UserModel.updateOne({ _id: req.tokenData._id }, { img_url: "usersImg/" + req.file.filename });
+    res.json(updateData);
   } catch (err) {
     console.log(err);
     res.status(502).json(err);
@@ -116,6 +135,21 @@ router.put("/editPassword", auth, async (req, res) => {
     }
     req.body.password = await bcrypt.hash(req.body.password, 10);
     user = await UserModel.updateOne({ _id: req.tokenData._id }, req.body);
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+    res.status(502).json(err);
+  }
+});
+
+router.delete("/deleteImg", auth, async (req, res) => {
+  try {
+    let user = await UserModel.findOne({ _id: req.tokenData._id });
+    if (!user.img_url) return res.status(400).json({ err: "No image found" });
+    const imagePath = "public/" + user.img_url;
+    await fs.promises.unlink(imagePath);
+    user.img_url = null;
+    await user.save();
     res.json(user);
   } catch (err) {
     console.log(err);
