@@ -159,7 +159,13 @@ router.delete("/deleteImg", auth, async (req, res) => {
 
 router.delete("/", auth, async (req, res) => {
   try {
+    let user = await UserModel.findOne({ _id: req.tokenData._id });
+    if (user.img_url) {
+      const imagePath = "public/" + user.img_url;
+      await fs.promises.unlink(imagePath);
+    }
     let data = await UserModel.deleteOne({ _id: req.tokenData._id });
+    await StatisticModel.deleteOne({ user_id: req.tokenData._id });
     res.json(data);
   } catch (err) {
     console.log(err);
@@ -167,11 +173,15 @@ router.delete("/", auth, async (req, res) => {
   }
 });
 
+//TODO
 // Chang user id
 router.patch("/role", authAdmin, async (req, res) => {
   try {
     let user_id = req.query.user_id;
     let role = req.query.role;
+    if (!user_id || !role) {
+      return res.status(400).json({ err: "user_id and role are required parameters" });
+    }
     if (user_id == req.tokenData._id || user_id == "63d68f8b9cd6921b2d9a8588") {
       return res.status(401).json({ err: "You try to change yourself or the super admin" });
     }
@@ -182,5 +192,7 @@ router.patch("/role", authAdmin, async (req, res) => {
     res.status(502).json(err);
   }
 });
+
+
 
 module.exports = router;
