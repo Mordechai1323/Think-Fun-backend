@@ -8,6 +8,9 @@ let userSchema = new mongoose.Schema({
   email: String,
   password: String,
   img_url: String,
+  refresh_tokens: {
+    type: [String],
+  },
   role: {
     type: String,
     default: "user",
@@ -52,7 +55,12 @@ exports.validateLogin = (reqBody) => {
   return joiSchema.validate(reqBody);
 };
 
-exports.generateToken = (user_id, role) => {
-  let token = jwt.sign({ _id: user_id, role }, process.env.TOKEN_SECRET, { expiresIn: "60mins" });
+exports.generateAccessToken = (user_id, role) => {
+  let token = jwt.sign({ _id: user_id, role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION });
+  return token;
+};
+
+exports.generateRefreshToken = (user_id, role) => {
+  let token = jwt.sign({ _id: user_id, role }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION });
   return token;
 };

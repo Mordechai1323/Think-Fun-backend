@@ -8,12 +8,32 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/memoryGame", async (req, res) => {
-  const limit = Number(req.query.limit) || 6;
+  let perPage = Number(req.query.perPage) || 10;
+  let page = Number(req.query.page) || 1;
   const category = req.query.category;
-
+  let searchQ = req.query.s;
+  let searchExp = new RegExp(searchQ, "i");
   try {
-    let data = await MemoryGameModel.find({ category_id: category }).limit(limit);
+    let findQuery = {};
+    if (category && searchExp) {
+      findQuery = { $and: [{ description: searchExp }, { category_id: category }] };
+    }
+    else findQuery = { description: searchExp }
+    let data = await MemoryGameModel.find(findQuery)
+      .limit(perPage)
+      .skip((page - 1) * perPage);
 
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(502).json(err);
+  }
+});
+
+router.get("/memoryGame/single/:id", authAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await MemoryGameModel.findOne({ _id: id });
     res.json(data);
   } catch (err) {
     console.log(err);

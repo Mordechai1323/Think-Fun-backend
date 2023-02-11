@@ -1,21 +1,30 @@
 const express = require("express");
 const path = require("path");
 const http = require("http");
-const cors = require("cors");
+const cors = require("cors")
+const corsOptions = require('./config/corsOptions');;
+const cookieParser = require('cookie-parser');
+const credentials = require('./middlewares/credentials');
 
-const { routesInit } = require("./routes/configRoutes");
+const {routesInit} = require("./routes/configRoutes");
 
-require("./db/mongoConnect");
+require("./db/mongoConnect")
 
 const app = express();
 
-app.use(cors());
+app.use(credentials);
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(cookieParser())
+
+app.use(express.static(path.join(__dirname,"public")));
+
 
 routesInit(app);
+
 
 const server = http.createServer(app);
 

@@ -1,19 +1,24 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const { validateUser, UserModel, validateLogin, generateToken, validateNameAndEmail, validatePassword } = require("../models/userModel");
-const { auth, authAdmin } = require("../middlewares/auth");
+const jwt = require("jsonwebtoken");
+const { validateUser, UserModel, validateLogin, generateAccessToken, generateRefreshToken, validateNameAndEmail, validatePassword } = require("../models/userModel");
+const { auth, authAdmin, authRefresh } = require("../middlewares/auth");
 const { StatisticModel } = require("../models/statisticModel");
 const { upload } = require("../util/uploadFile");
 const fs = require("fs");
 const router = express.Router();
+require("dotenv").config();
 
 router.get("/allUsers", authAdmin, async (req, res) => {
   let perPage = Number(req.query.perPage) || 10;
   let page = Number(req.query.page) || 1;
   let sort = req.query.sort || "_id";
-  let reverse = req.query.reverse == "yes" ? 1 : -1;
+  let reverse = req.query.reverse == 'true' ? 1 : -1;
+  let search = req.query.s;
+  let searchExp = new RegExp(search, "i");
+
   try {
-    let users = await UserModel.find({})
+    let users = await UserModel.find({name: searchExp})
       .limit(perPage)
       .skip((page - 1) * perPage)
       .sort({ [sort]: reverse });
@@ -31,6 +36,7 @@ router.get("/checkToken", auth, async (req, res) => {
 router.get("/myInfo", auth, async (req, res) => {
   try {
     let data = await UserModel.findOne({ _id: req.tokenData._id }, { password: 0 });
+    data.refresh_tokens = [];
     res.json(data);
   } catch (err) {
     console.log(err);
@@ -42,15 +48,15 @@ router.get("/count", async (req, res) => {
   let perPage = Number(req.query.perPage) || 10;
   try {
     let count = await UserModel.countDocuments({});
-    let page = Math.ceil(count / perPage);
-    res.json({ count, page });
+    let pages = Math.ceil(count / perPage);
+    res.json({ count, pages });
   } catch (err) {
     console.log(err);
     res.status(502).json(err);
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/register", async (req, res) => {
   const validBody = validateUser(req.body);
   if (validBody.error) {
     return res.status(400).json(validBody.error.details);
@@ -58,12 +64,20 @@ router.post("/", async (req, res) => {
   try {
     const user = new UserModel(req.body);
     user.password = await bcrypt.hash(user.password, 10);
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id, user.role);
+    user.refresh_tokens = [refreshToken];
+
     await user.save();
+
     user.password = "*****";
     const statistic = new StatisticModel();
     statistic.user_id = user._id;
     await statistic.save();
-    res.status(201).json(user);
+
+    res.cookie("token", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    res.status(201).json({ accessToken, user });
   } catch (err) {
     if (err.code == 11000) {
       return res.status(401).json({ err: "Email already in system, try log in", code: 11000 });
@@ -74,23 +88,67 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  let validBody = validateLogin(req.body);
+  const validBody = validateLogin(req.body);
   if (validBody.error) {
     return res.status(400).json(validBody.error.details);
   }
   try {
-    let user = await UserModel.findOne({ email: req.body.email });
+    const user = await UserModel.findOne({ email: req.body.email });
     if (!user) {
       return res.status(401).json({ err: "Email or password not match" });
     }
-    let validPassword = await bcrypt.compare(req.body.password, user.password);
-    if (!validPassword) {
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if (!match) {
       return res.status(401).json({ err: "Email or password not match" });
     }
-    let token = generateToken(user._id, user.role);
-    res.json({ token });
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id, user.role);
+    if (!user.refresh_tokens) user.refresh_tokens = [refreshToken];
+    else user.refresh_tokens.push(refreshToken);
+    await user.save();
+
+    res.cookie("token", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    res.json({ accessToken, name: user.name, role: user.role });
   } catch (err) {
     console.log(err);
+    res.status(502).json(err);
+  }
+});
+
+router.get("/refreshToken", authRefresh, async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ _id: req.tokenData._id });
+    if (!user) return res.status(401).json({ err: "fail validating token" });
+    if (!user.refresh_tokens.includes(req.refreshToken)) {
+      user.refresh_tokens = [];
+      await user.save();
+      return res.status(403).json({ err: "fail validating token" });
+    }
+    const accessToken = generateAccessToken(user._id, user.role);
+    res.json({ accessToken, name: user.name, role: user.role });
+  } catch (err) {
+    return res.status(403).json({ err: "fail validating token" });
+  }
+});
+
+router.get("/logout", authRefresh, async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ _id: req.tokenData._id });
+    if (!user) {
+      res.clearCookie("token", { httpOnly: true });
+      return res.status(401);
+    }
+    if (!user.refresh_tokens.includes(req.refreshToken)) {
+      res.clearCookie("token", { httpOnly: true });
+      user.refresh_tokens = [];
+      await user.save();
+      return res.status(401).json({ err: "no token" });
+    }
+    user.refresh_tokens.splice(user.refresh_tokens.indexOf(req.refreshToken), 1);
+    await user.save();
+    res.clearCookie("token", { httpOnly: true });
+    res.sendStatus(200);
+  } catch (err) {
     res.status(502).json(err);
   }
 });
@@ -192,7 +250,5 @@ router.patch("/role", authAdmin, async (req, res) => {
     res.status(502).json(err);
   }
 });
-
-
 
 module.exports = router;

@@ -4,8 +4,10 @@ const { CategoryModel, validateCategory } = require("../models/categoryModel");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
+  let search = req.query.s;
+  let searchExp = new RegExp(search, "i");
   try {
-    const data = await CategoryModel.find({});
+    const data = await CategoryModel.find({name: searchExp});
     res.json(data);
   } catch (err) {
     console.log(err);
