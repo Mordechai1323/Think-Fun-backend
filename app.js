@@ -1,6 +1,10 @@
 const server = require("./server");
+const socketServer = require("./socket_server");
 
+socketServer(server);
 
-let port = process.env.PORT || 3002;
+const port = process.env.PORT || 3002;
 
-server.listen(port);
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

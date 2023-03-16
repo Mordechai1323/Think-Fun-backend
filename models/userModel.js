@@ -15,6 +15,10 @@ let userSchema = new mongoose.Schema({
     type: String,
     default: "user",
   },
+  forgot_password: {
+    One_time_code: { type: Number, default: 0 },
+    token: { type: String, default: "" },
+  },
   date_created: {
     type: Date,
     default: Date.now,

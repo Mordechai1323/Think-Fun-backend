@@ -13,7 +13,7 @@ router.get("/allUsers", authAdmin, async (req, res) => {
   let perPage = Number(req.query.perPage) || 10;
   let page = Number(req.query.page) || 1;
   let sort = req.query.sort || "_id";
-  let reverse = req.query.reverse == 'true' ? 1 : -1;
+  let reverse = req.query.reverse == 'true' ? -1 : 1;
   let search = req.query.s;
   let searchExp = new RegExp(search, "i");
 
@@ -29,9 +29,9 @@ router.get("/allUsers", authAdmin, async (req, res) => {
   }
 });
 
-router.get("/checkToken", auth, async (req, res) => {
-  res.json(req.tokenData);
-});
+// router.get("/checkToken", auth, async (req, res) => {
+//   res.json(req.tokenData);
+// });
 
 router.get("/myInfo", auth, async (req, res) => {
   try {
@@ -107,7 +107,7 @@ router.post("/login", async (req, res) => {
     else user.refresh_tokens.push(refreshToken);
     await user.save();
 
-    res.cookie("token", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie("token", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000/*, secure:true*/ });
     res.json({ accessToken, name: user.name, role: user.role });
   } catch (err) {
     console.log(err);
