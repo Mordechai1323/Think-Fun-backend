@@ -3,7 +3,7 @@ const { Server } = require("socket.io");
 module.exports = function (server) {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: "http://147.235.202.221:3000",
     },
   });
 
@@ -12,7 +12,6 @@ module.exports = function (server) {
   let player2;
   const rooms = [];
   io.on("connection", (socket) => {
-
     socket.on("start-game", () => {
       waitingList.push(socket.id);
 
