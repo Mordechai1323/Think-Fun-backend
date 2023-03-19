@@ -9,17 +9,17 @@ const { upload } = require("../util/uploadFile");
 const fs = require("fs");
 const router = express.Router();
 
-
+//remove password  and token
 router.get("/allUsers", authAdmin, async (req, res) => {
   let perPage = Number(req.query.perPage) || 10;
   let page = Number(req.query.page) || 1;
   let sort = req.query.sort || "_id";
-  let reverse = req.query.reverse == 'true' ? -1 : 1;
+  let reverse = req.query.reverse == "true" ? -1 : 1;
   let search = req.query.s;
   let searchExp = new RegExp(search, "i");
 
   try {
-    let users = await UserModel.find({name: searchExp})
+    let users = await UserModel.find({ name: searchExp }, { password  : 0 })
       .limit(perPage)
       .skip((page - 1) * perPage)
       .sort({ [sort]: reverse });
@@ -108,7 +108,7 @@ router.post("/login", async (req, res) => {
     else user.refresh_tokens.push(refreshToken);
     await user.save();
 
-    res.cookie("token", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000/*, secure:true*/ });
+    res.cookie("token", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 , secure: true, sameSite: 'None' });
     res.json({ accessToken, name: user.name, role: user.role });
   } catch (err) {
     console.log(err);
