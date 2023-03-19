@@ -1,13 +1,14 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 const { validateUser, UserModel, validateLogin, generateAccessToken, generateRefreshToken, validateNameAndEmail, validatePassword } = require("../models/userModel");
 const { auth, authAdmin, authRefresh } = require("../middlewares/auth");
 const { StatisticModel } = require("../models/statisticModel");
 const { upload } = require("../util/uploadFile");
 const fs = require("fs");
 const router = express.Router();
-require("dotenv").config();
+
 
 router.get("/allUsers", authAdmin, async (req, res) => {
   let perPage = Number(req.query.perPage) || 10;

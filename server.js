@@ -2,9 +2,10 @@ const express = require("express");
 const path = require("path");
 const http = require("http");
 const cors = require("cors")
-const corsOptions = require('./config/corsOptions');;
 const cookieParser = require('cookie-parser');
+const corsOptions = require('./config/corsOptions');;
 const credentials = require('./middlewares/credentials');
+
 
 const {routesInit} = require("./routes/configRoutes");
 
