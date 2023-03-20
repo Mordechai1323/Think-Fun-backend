@@ -2,9 +2,8 @@ const { Server } = require("socket.io");
 
 module.exports = function (server) {
   const io = new Server(server, {
-    methods: ["GET", "POST"],
     cors: {
-      origin: ["http://localhost:3000", "https://jocular-muffin-880358.netlify.app"],
+      origin: ["http://localhost:3000", "https://jocular-muffin-880358.netlify.app", "https://astounding-malasada-fb16fa.netlify.app"],
     },
   });
 
