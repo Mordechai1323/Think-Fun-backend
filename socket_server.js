@@ -5,9 +5,7 @@ module.exports = function (server) {
     methods: ["GET", "POST"],
     cors: {
       origin: ["http://localhost:3000", "https://jocular-muffin-880358.netlify.app"],
-      credentials: true,
     },
-    transports: ["websocket"],
   });
 
   let waitingList = [];
