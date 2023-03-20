@@ -2,8 +2,9 @@ const { Server } = require("socket.io");
 
 module.exports = function (server) {
   const io = new Server(server, {
+    methods: ["GET", "POST"],
     cors: {
-      origin: ["http://147.235.202.221:3000", "http://localhost:3000", "https://jocular-muffin-880358.netlify.app"],
+      origin: ["http://localhost:3000", "https://jocular-muffin-880358.netlify.app"],
     },
   });
 
@@ -15,6 +16,7 @@ module.exports = function (server) {
     socket.on("start-game", () => {
       waitingList.push(socket.id);
 
+      console.log(waitingList);
       if (waitingList.length == 2) {
         player1 = waitingList.shift();
         player2 = waitingList.shift();
@@ -42,6 +44,7 @@ module.exports = function (server) {
       if (!rooms) rooms = [room];
       else rooms.push(room);
       io.to(socket.id).emit("invite-friend-to-game", room.id_room);
+      console.log(room);
     });
 
     socket.on("invitation-link", (id_room) => {
