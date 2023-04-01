@@ -12,6 +12,7 @@ module.exports = function (server) {
   let player2;
   const rooms = [];
   io.on("connection", (socket) => {
+    
     socket.on("start-game", () => {
       waitingList.push(socket.id);
 

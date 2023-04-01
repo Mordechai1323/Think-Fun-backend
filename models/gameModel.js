@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
-const memoryGameSchema = new mongoose.Schema({
+const matchingGameSchema = new mongoose.Schema({
   description: String,
   img_url: String,
   category_id: String,
@@ -11,9 +11,9 @@ const memoryGameSchema = new mongoose.Schema({
   },
 });
 
-exports.MemoryGameModel = mongoose.model("games", memoryGameSchema);
+exports.MatchingGameModel = mongoose.model("games", matchingGameSchema);
 
-exports.validateMemoryGame = (reqBody) => {
+exports.validateMatchingGame = (reqBody) => {
   const joiSchema = Joi.object({
     description: Joi.string().min(2).max(200).required(),
     img_url: Joi.string().min(2).max(500).required(),
