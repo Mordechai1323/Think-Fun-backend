@@ -3,7 +3,7 @@ const { Server } = require("socket.io");
 module.exports = function (server) {
   const io = new Server(server, {
     cors: {
-      origin: ["http://localhost:3000", "https://jocular-muffin-880358.netlify.app", "https://astounding-malasada-fb16fa.netlify.app"],
+      origin: ["http://localhost:3000", "https://jocular-muffin-880358.netlify.app", "https://think-fun.online"],
     },
   });
 

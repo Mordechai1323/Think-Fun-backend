@@ -4,8 +4,8 @@ require('dotenv').config();
 exports.auth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ err: 'authentication missing' });
-  const token = authHeader;
-  //const token = authHeader.split(" ")[1];
+  // const token = authHeader;
+  const token = authHeader.split(' ')[1];
   try {
     let decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.tokenData = decodeToken;
@@ -18,8 +18,8 @@ exports.auth = (req, res, next) => {
 exports.authAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ err: 'authentication missing' });
-  const token = authHeader
-  //const token = authHeader.split(' ')[1];
+  //const token = authHeader
+  const token = authHeader.split(' ')[1];
   try {
     let decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     if (decodeToken.role != 'admin') {
