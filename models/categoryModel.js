@@ -10,9 +10,9 @@ const categorySchema = new mongoose.Schema({
 exports.CategoryModel = mongoose.model("categories", categorySchema);
 
 exports.validateCategory = (reqBody) => {
-  reqBody.name = reqBody.name.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
-  reqBody.category_id = reqBody.category_id.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
-  reqBody.img_url = reqBody.img_url.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
+  reqBody.name = reqBody.name?.replace(/[^A-Za-zא-ת0-9\s\-_]/g, ' ');
+  reqBody.category_id = reqBody.category_id?.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
+  reqBody.img_url = reqBody?.img_url?.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
 
   const joiSchema = Joi.object({
     name: Joi.string().min(2).max(300).required(),

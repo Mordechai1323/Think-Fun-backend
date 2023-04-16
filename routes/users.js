@@ -104,15 +104,15 @@ router.post('/login', async (req, res) => {
   }
   try {
     const human = await validateHuman(req.body.recaptchaToken);
-    if (!human) return res.sendStatus(401);
+    if (!human) return res.sendStatus(402);
 
     const user = await UserModel.findOne({ email: req.body.email });
     if (!user) {
-      return res.status(401).json({ err: 'Email or password not match' });
+      return res.sendStatus(401);
     }
     const match = await bcrypt.compare(req.body.password, user.password);
     if (!match) {
-      return res.status(401).json({ err: 'Email or password not match' });
+      return res.sendStatus(401);
     }
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id, user.role);
@@ -121,10 +121,10 @@ router.post('/login', async (req, res) => {
     await user.save();
 
     res.cookie('token', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, secure: true, sameSite: 'None' });
-    res.json({ accessToken, name: user.name, role: user.role });
+    res.json({ accessToken, name: user.name, role: user.role, img_url: user.img_url });
   } catch (err) {
     console.log(err);
-    res.status(502).json(err);
+    res.sendStatus(502);
   }
 });
 
@@ -138,7 +138,7 @@ router.get('/refreshToken', authRefresh, async (req, res) => {
       return res.status(403).json({ err: 'fail validating token' });
     }
     const accessToken = generateAccessToken(user._id, user.role);
-    res.json({ accessToken, name: user.name, role: user.role });
+    res.json({ accessToken, name: user.name, role: user.role, img_url: user.img_url });
   } catch (err) {
     return res.status(403).json({ err: 'fail validating token' });
   }
@@ -169,6 +169,7 @@ router.get('/logout', authRefresh, async (req, res) => {
 router.post('/uploadImage', auth, async (req, res) => {
   try {
     upload(req, res, async (err) => {
+      console.log(req.file);
       if (err || !req.file) {
         console.log('err :' + err);
         return res.status(400).json({ err: 'only image' });

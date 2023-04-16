@@ -1,3 +1,4 @@
+const { default: axios } = require('axios');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -52,3 +53,9 @@ exports.getTokenFromRequest = (req) => {
   return authHeader.split(' ')[1];
 };
 
+exports.validateHuman = async (token) => {
+  const response = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`);
+  console.log(response.data.success);
+  
+  return response.data.success
+};

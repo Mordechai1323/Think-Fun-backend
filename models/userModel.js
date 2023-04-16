@@ -24,35 +24,38 @@ let userSchema = new mongoose.Schema({
 exports.UserModel = mongoose.model('users', userSchema);
 
 exports.validateUser = (reqBody) => {
-
-  reqBody.name = reqBody.name.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
-  reqBody.email = reqBody.email.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
-  reqBody.password = reqBody.password.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.name = reqBody.name?.replace(/[^A-Za-zא-ת0-9\s\-_]/g, ' ');
+  reqBody.email = reqBody.email?.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
+  reqBody.password = reqBody.password?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.recaptchaToken = reqBody.recaptchaToken?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.img_url = reqBody.img_url?.replace(/[^A-Za-z0-9\s\-_/?.=:]/g, ' ');
 
   let joiSchema = Joi.object({
     name: Joi.string().min(2).max(150).required(),
     email: Joi.string().min(2).max(150).email().required(),
     password: Joi.string().min(6).max(150).required(),
-    
+    recaptchaToken: Joi.string().min(6).max(5000).required(),
+    img_url: Joi.string().min(2).max(300).allow(null, ''),
   });
   return joiSchema.validate(reqBody);
 };
 
 exports.validateLogin = (reqBody) => {
-  reqBody.email = reqBody.email.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
-  reqBody.password = reqBody.password.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.email = reqBody.email?.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
+  reqBody.password = reqBody.password?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.recaptchaToken = reqBody.recaptchaToken?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
 
   let joiSchema = Joi.object({
     email: Joi.string().min(2).max(150).email().required(),
     password: Joi.string().min(6).max(150).required(),
-    
+    recaptchaToken: Joi.string().min(6).max(5000).required(),
   });
   return joiSchema.validate(reqBody);
 };
 
 exports.validateNameAndEmail = (reqBody) => {
-  reqBody.name = reqBody.name.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
-  reqBody.email = reqBody.email.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
+  reqBody.name = reqBody.name?.replace(/[^A-Za-zא-ת0-9\s\-_]/g, ' ');
+  reqBody.email = reqBody.email?.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
 
   let joiSchema = Joi.object({
     name: Joi.string().min(2).max(150).required(),
@@ -62,8 +65,8 @@ exports.validateNameAndEmail = (reqBody) => {
 };
 
 exports.validatePassword = (reqBody) => {
-  reqBody.oldPassword = reqBody.oldPassword.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
-  reqBody.password = reqBody.password.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.oldPassword = reqBody.oldPassword?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  reqBody.password = reqBody.password?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
 
   let joiSchema = Joi.object({
     oldPassword: Joi.string().min(6).max(150).required(),
@@ -73,17 +76,18 @@ exports.validatePassword = (reqBody) => {
 };
 
 exports.validateEmail = (reqBody) => {
-  reqBody.email = reqBody.email.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
-
+  reqBody.email = reqBody.email?.replace(/[^A-Za-z0-9\s\-_@.]/g, ' ');
+  reqBody.recaptchaToken = reqBody.recaptchaToken?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+  
   let joiSchema = Joi.object({
     email: Joi.string().min(2).max(150).email().required(),
-    recaptchaToken: Joi.string().min(6).max(150).required(),
+    recaptchaToken: Joi.string().min(6).max(5000).required(),
   });
   return joiSchema.validate(reqBody);
 };
 
 exports.validateOneTimeCode = (reqBody) => {
-  reqBody.code = reqBody.code.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
+  reqBody.code = reqBody.code?.replace(/[^A-Za-z0-9\s\-_]/g, ' ');
 
   let joiSchema = Joi.object({
     code: Joi.number().min(100000).max(999999).required(),
@@ -92,8 +96,8 @@ exports.validateOneTimeCode = (reqBody) => {
 };
 
 exports.validatePasswordOneTimeCode = (reqBody) => {
-  reqBody.password = reqBody.password.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
-  
+  reqBody.password = reqBody.password?.replace(/[^A-Za-z0-9\s\-_@?!]/g, ' ');
+
   let joiSchema = Joi.object({
     password: Joi.string().min(6).max(150).required(),
   });

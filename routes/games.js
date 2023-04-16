@@ -1,24 +1,36 @@
-const express = require("express");
-const { authAdmin } = require("../middlewares/auth");
-const { MatchingGameModel, validateMatchingGame } = require("../models/gameModel");
+const express = require('express');
+const { authAdmin } = require('../middlewares/auth');
+const { MatchingGameModel, validateMatchingGame } = require('../models/gameModel');
+const { ticTacToeHelp } = require('../middlewares/helpFromGPT');
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  res.json({ err: "games Work 200" });
+router.post('/helpFromGPT', async (req, res) => {
+  const typeGame = req.query.typeGame;
+  let result;
+  switch (typeGame) {
+    case 'tic_tac_toe':
+      result = ticTacToeHelp(req.body.board, req.body.sign);
+      break;
+    case 'matching_game':
+      result = ticTacToeHelp(req.body.board, req.body.sign);
+      break;
+    default:
+      break;
+  }
+  res.json(result);
 });
 
-router.get("/matchingGame", async (req, res) => {
+router.get('/matchingGame', async (req, res) => {
   let perPage = Number(req.query.perPage) || 10;
   let page = Number(req.query.page) || 1;
   const category = req.query.category;
   let searchQ = req.query.s;
-  let searchExp = new RegExp(searchQ, "i");
+  let searchExp = new RegExp(searchQ, 'i');
   try {
     let findQuery = {};
     if (category && searchExp) {
       findQuery = { $and: [{ description: searchExp }, { category_id: category }] };
-    }
-    else findQuery = { description: searchExp }
+    } else findQuery = { description: searchExp };
     let data = await MatchingGameModel.find(findQuery)
       .limit(perPage)
       .skip((page - 1) * perPage);
@@ -30,7 +42,7 @@ router.get("/matchingGame", async (req, res) => {
   }
 });
 
-router.get("/matchingGame/single/:id", authAdmin, async (req, res) => {
+router.get('/matchingGame/single/:id', authAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     const data = await MatchingGameModel.findOne({ _id: id });
@@ -41,7 +53,7 @@ router.get("/matchingGame/single/:id", authAdmin, async (req, res) => {
   }
 });
 
-router.post("/matchingGame", authAdmin, async (req, res) => {
+router.post('/matchingGame', authAdmin, async (req, res) => {
   const validBody = validateMatchingGame(req.body);
   if (validBody.error) {
     return res.status(400).json(validBody.error.details);
@@ -56,7 +68,7 @@ router.post("/matchingGame", authAdmin, async (req, res) => {
   }
 });
 
-router.put("/matchingGame/:idEdit", authAdmin, async (req, res) => {
+router.put('/matchingGame/:idEdit', authAdmin, async (req, res) => {
   const validBody = validateMatchingGame(req.body);
   if (validBody.error) {
     return res.status(400).json(validBody.error.details);
@@ -71,7 +83,7 @@ router.put("/matchingGame/:idEdit", authAdmin, async (req, res) => {
   }
 });
 
-router.delete("/matchingGame/:idDel", authAdmin, async (req, res) => {
+router.delete('/matchingGame/:idDel', authAdmin, async (req, res) => {
   try {
     const idDel = req.params.idDel;
     const data = await MatchingGameModel.deleteOne({ _id: idDel }, req.body);

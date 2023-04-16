@@ -4,11 +4,11 @@ const { BestPlayerModel } = require("../models/bestPlayerModel");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const typeGame = req.query.typeGame;
-  let searchExp = new RegExp(typeGame, "i");
   try {
-    let bestPlayers = await BestPlayerModel.find({ type_game: searchExp });
-    res.json(bestPlayers);
+    let ticTacToeBestPlayers = await BestPlayerModel.find({ type_game: 'tic_tac_toe' });
+    let matchingGameBestPlayers = await BestPlayerModel.find({ type_game: 'matching_game' });
+    let checkersBestPlayers = await BestPlayerModel.find({ type_game: 'checkers' });
+    res.json({ticTacToeBestPlayers,matchingGameBestPlayers, checkersBestPlayers});
   } catch (err) {
     console.log(err);
     res.status(502).json({ err });
