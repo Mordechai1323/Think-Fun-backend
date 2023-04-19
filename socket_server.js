@@ -11,13 +11,13 @@ module.exports = function (server) {
 
   let waitingListTicTacToe = [];
   let waitingListMatchingGame = [];
+  let waitingListCheckers = [];
   let counter = 0;
   const rooms = [];
   io.on('connection', (socket) => {
     socket.on('start-tic-tac-toe', () => {
       waitingListTicTacToe.push(socket.id);
 
-      console.log(waitingListTicTacToe);
       if (waitingListTicTacToe.length == 2) {
         const idPlayer1 = waitingListTicTacToe.shift();
         const idPlayer2 = waitingListTicTacToe.shift();
@@ -37,8 +37,6 @@ module.exports = function (server) {
 
     socket.on('start-matching-game', async () => {
       waitingListMatchingGame.push(socket.id);
-
-      console.log(waitingListMatchingGame);
       if (waitingListMatchingGame.length == 2) {
         const idPlayer1 = waitingListMatchingGame.shift();
         const idPlayer2 = waitingListMatchingGame.shift();
@@ -58,6 +56,25 @@ module.exports = function (server) {
       }
     });
 
+    socket.on('start-checkers', () => {
+      waitingListCheckers.push(socket.id);
+      if (waitingListCheckers.length == 2) {
+        const idPlayer1 = waitingListCheckers.shift();
+        const idPlayer2 = waitingListCheckers.shift();
+
+        const room = {
+          id_room: generateUniqueId(),
+          idPlayer1,
+          idPlayer2,
+          whose_turn: idPlayer1,
+        };
+        io.to(idPlayer1).emit('game-started', room);
+        io.to(idPlayer2).emit('game-started', room);
+        if (!rooms) rooms = [room];
+        else rooms.push(room);
+      }
+    });
+
     socket.on('invite-friend-to-game', () => {
       const room = {
         id_room: generateUniqueId(),
@@ -68,14 +85,14 @@ module.exports = function (server) {
       if (!rooms) rooms = [room];
       else rooms.push(room);
       io.to(socket.id).emit('invite-friend-to-game', room.id_room);
-      console.log(room);
     });
 
     socket.on('invitation-link', (idRoom) => {
       rooms.forEach((room) => {
         if (room.id_room === idRoom) {
-          (room.player2 = socket.id), io.to(room.player1.id).emit('game-started', room);
-          io.to(room.player2.id).emit('game-started', room);
+          room.player2 = socket.id;
+          io.to(room.idPlayer1).emit('game-started', room);
+          io.to(room.idPlayer2).emit('game-started', room);
         }
       });
     });
@@ -119,13 +136,11 @@ module.exports = function (server) {
       socket.to(messageObject.id_room).emit('receiver-message', messageObject);
     });
 
-    socket.on('aa', () => {
-      console.log(`I don't believe you`);
+    socket.on('disconnected', () => {
       let index = waitingListTicTacToe.indexOf(socket.id);
       index === -1 ? (index = waitingListMatchingGame.indexOf(socket.id)) : waitingListTicTacToe.splice(index, 1);
-      index !== -1 ? waitingListMatchingGame.splice(index, 1) : '';
-      console.log(waitingListTicTacToe);
-      console.log(waitingListMatchingGame);
+      index === -1 ? (index = waitingListCheckers.indexOf(socket.id)) : waitingListMatchingGame.splice(index, 1);
+      index !== -1 ? waitingListCheckers.splice(index, 1) : '';
 
       rooms.forEach((room, i) => {
         if (room.idPlayer1 === socket.id || room.idPlayer2 === socket.id) {
@@ -136,12 +151,10 @@ module.exports = function (server) {
     });
 
     socket.on('disconnect', () => {
-      console.log(`I don't believe you`);
       let index = waitingListTicTacToe.indexOf(socket.id);
       index === -1 ? (index = waitingListMatchingGame.indexOf(socket.id)) : waitingListTicTacToe.splice(index, 1);
-      index !== -1 ? waitingListMatchingGame.splice(index, 1) : '';
-      console.log(waitingListTicTacToe);
-      console.log(waitingListMatchingGame);
+      index === -1 ? (index = waitingListCheckers.indexOf(socket.id)) : waitingListMatchingGame.splice(index, 1);
+      index !== -1 ? waitingListCheckers.splice(index, 1) : '';
 
       rooms.forEach((room, i) => {
         if (room.idPlayer1 === socket.id || room.idPlayer2 === socket.id) {
@@ -165,14 +178,10 @@ const doubleAndShuffleCards = async () => {
   const categories = await CategoryModel.find();
   const randomNumber = Math.floor(Math.random() * categories.length);
   const cards = await MatchingGameModel.find({ category_id: categories[randomNumber].category_id });
-  // for (let i = 0; i < cards.length; i++) {
-  //  cards[i].isOpen = false
-  //  cards[i].isMatched = false
-  // } 
-  const newCards =  cards.map((card) => ({ ...card, isOpen: false, isMatched: false }));
+  const newCards = cards.map((card) => ({ ...card, isOpen: false, isMatched: false }));
   const doubledCards = newCards.concat(newCards);
   // const doubledCards = cards.concat(cards);
-  const mixedCards = doubledCards.sort(() => Math.random() - 0.5);
+  // const mixedCards = doubledCards.sort(() => Math.random() - 0.5);
 
-  return mixedCards;
+  return doubledCards;
 };

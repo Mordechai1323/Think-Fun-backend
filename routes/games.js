@@ -4,7 +4,7 @@ const { MatchingGameModel, validateMatchingGame } = require('../models/gameModel
 const { ticTacToeHelp } = require('../middlewares/helpFromGPT');
 const router = express.Router();
 
-router.post('/helpFromGPT', async (req, res) => {
+router.get('/helpFromGPT', async (req, res) => {
   const typeGame = req.query.typeGame;
   let result;
   switch (typeGame) {

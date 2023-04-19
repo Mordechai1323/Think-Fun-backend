@@ -72,6 +72,7 @@ router.post('/register', async (req, res) => {
   try {
     const human = await validateHuman(req.body.recaptchaToken);
     if (!human) return res.sendStatus(400);
+
     const user = new UserModel(req.body);
     user.password = await bcrypt.hash(user.password, 10);
 
@@ -104,7 +105,7 @@ router.post('/login', async (req, res) => {
   }
   try {
     const human = await validateHuman(req.body.recaptchaToken);
-    if (!human) return res.sendStatus(402);
+    if (!human) return res.sendStatus(400);
 
     const user = await UserModel.findOne({ email: req.body.email });
     if (!user) {
@@ -187,7 +188,7 @@ router.post('/uploadImage', auth, async (req, res) => {
 router.post('/forgotPassword', async (req, res) => {
   const validBody = validateEmail(req.body);
   if (validBody.error) {
-    return res.status(401).json(validBody.error.details);
+    return res.status(400).json(validBody.error.details);
   }
   try {
     const human = await validateHuman(req.body.recaptchaToken);
@@ -210,11 +211,11 @@ router.post('/forgotPassword', async (req, res) => {
 router.post('/verifyOneTimeCode', auth, async (req, res) => {
   const validBody = validateOneTimeCode(req.body);
   if (validBody.error) {
-    return res.status(401).json(validBody.error.details);
+    return res.status(400).json(validBody.error.details);
   }
   try {
     const user = await UserModel.findOne({ _id: req.tokenData._id });
-    if (!user) return res.sendStatus(401);
+    if (!user) return res.sendStatus(400);
     const match = await bcrypt.compare(req.body.code.toString(), user.one_time_code);
     if (!match) return res.sendStatus(401);
     const tokenConfirmationCodeVerified = generateOneTimeCodeToken(user._id);
@@ -228,15 +229,15 @@ router.post('/verifyOneTimeCode', auth, async (req, res) => {
 router.put('/editPassword/oneTimeCode', auth, async (req, res) => {
   const validBody = validatePasswordOneTimeCode(req.body);
   if (validBody.error) {
-    return res.status(401).json(validBody.error.details);
+    return res.status(400).json(validBody.error.details);
   }
   try {
     const user = await UserModel.findOne({ _id: req.tokenData._id });
     if (!user) return res.sendStatus(401);
     user.password = await bcrypt.hash(req.body.password, 10);
-    //user = await UserModel.updateOne({ _id: user._id }, user);
+    user.one_time_code = null;
     user.save();
-    res.json(user);
+    res.sendStatus(200);
   } catch (err) {
     console.log(err);
     res.status(502).json({ err });
@@ -301,12 +302,13 @@ router.post('/editImage', auth, async (req, res) => {
 router.delete('/deleteImage', auth, async (req, res) => {
   try {
     let user = await UserModel.findOne({ _id: req.tokenData._id });
+    if (!user) return res.sendStatus(401);
     if (!user.img_url) return res.status(400).json({ err: 'No image found' });
     const imagePath = 'public/' + user.img_url;
     await fs.promises.unlink(imagePath);
-    user.img_url = null;
+    user.img_url = `https://api.dicebear.com/6.x/pixel-art/svg?seed=${user.name}`;
     await user.save();
-    res.json(user);
+    res.sendStatus(200);
   } catch (err) {
     console.log(err);
     res.status(502).json(err);
@@ -316,7 +318,7 @@ router.delete('/deleteImage', auth, async (req, res) => {
 router.delete('/', auth, async (req, res) => {
   try {
     let user = await UserModel.findOne({ _id: req.tokenData._id });
-    if (user.img_url) {
+    if (user.img_url[0] !== 'h') {
       const imagePath = 'public/' + user.img_url;
       await fs.promises.unlink(imagePath);
     }

@@ -1,5 +1,4 @@
 exports.ticTacToeHelp = (board, sign) => {
-  AImove(board, sign.toUpperCase());
 
   var winList = [
     [0, 1, 2],
@@ -12,42 +11,7 @@ exports.ticTacToeHelp = (board, sign) => {
     [2, 4, 6],
   ];
 
-  let checkIfWin = (board, sign) => {
-    const isWin = winList.some((winCombination) => {
-      return winCombination.every((index) => {
-        return board[index] === sign;
-      });
-    });
-    if (isWin) return true;
-    if (!board.includes(' ')) return 'tie';
-    return false;
-  };
-
-  let countSign = (board, sign) => {
-    return board.filter((board) => board === sign).length;
-  };
-
-  function checkEachOption(board, sign) {
-    let res;
-    winList.forEach((winCombination) => {
-      let temp = winCombination.filter((index) => board[index] === sign);
-      if (res === undefined && temp.length === 2) {
-        res = checkIfEmptyPlace(board, winCombination);
-      }
-    });
-    return res;
-  }
-
-  function checkIfEmptyPlace(board, options) {
-    let res;
-    options.forEach((i) => {
-      if (board[i] === ' ') {
-        // why not options[i]
-        res = i;
-      }
-    });
-    return res;
-  }
+  return AImove(board, sign.toUpperCase());
 
   function AImove(board, sign) {
     return manualMoves4FirstTurn(board, sign) ?? buildGameTree(board, sign);
@@ -81,16 +45,15 @@ exports.ticTacToeHelp = (board, sign) => {
   }
 
   function checkBranch(board, sign) {
-    let res = checkIfWin(board, sign === 'X' ? 'O' : 'X');
+    let res = checkIfWin(board);
     if (res) {
       if (res === 'tie') {
         return 0;
       }
       return sign === 'O' ? -1 : 1;
     }
-
     /* Checking if there is a winning move for the AI or the player. If there is, it returns the score
-        of that move. */
+      of that move. */
     let goodOption, tempArr;
     if (sign === 'X') {
       goodOption = checkEachOption(board, 'X') ?? checkEachOption(board, 'O');
@@ -114,5 +77,44 @@ exports.ticTacToeHelp = (board, sign) => {
     }
 
     return sign === 'X' ? Math.min(...Object.values(avialbleOptions)) : Math.max(...Object.values(avialbleOptions));
+  }
+
+  function countSign(board, sign) {
+    return board.filter((board) => board === sign).length;
+  }
+
+  function checkIfWin(board) {
+    for (let i = 0; i < winList.length; i++) {
+      const [a, b, c] = winList[i];
+      let winCombination = board[a] !== ' ' && board[a] === board[b] && board[b] === board[c];
+      if (winCombination) {
+        return board[a];
+      }
+    }
+
+    if (!board.includes(' ')) return 'tie';
+    return false;
+  }
+
+  function checkEachOption(board, sign) {
+    let res;
+    winList.forEach((winCombination) => {
+      let temp = winCombination.filter((index) => board[index] === sign);
+      if (res === undefined && temp.length === 2) {
+        res = checkIfEmptyPlace(board, winCombination);
+      }
+    });
+    return res;
+  }
+
+  function checkIfEmptyPlace(board, options) {
+    let res;
+    options.forEach((i) => {
+      if (board[i] === ' ') {
+        // why not options[i]
+        res = i;
+      }
+    });
+    return res;
   }
 };
