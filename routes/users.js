@@ -170,7 +170,6 @@ router.get('/logout', authRefresh, async (req, res) => {
 router.post('/uploadImage', auth, async (req, res) => {
   try {
     upload(req, res, async (err) => {
-      console.log(req.file);
       if (err || !req.file) {
         console.log('err :' + err);
         return res.status(400).json({ err: 'only image' });
@@ -286,7 +285,6 @@ router.post('/editImage', auth, async (req, res) => {
     await fs.promises.unlink(imagePath);
     upload(req, res, async (err) => {
       if (err || !req.file) {
-        console.log('err :' + err);
         return res.status(400).json({ err: 'only image' });
       } else {
         let updateData = await UserModel.updateOne({ _id: req.tokenData._id }, { img_url: 'usersImg/' + req.file.filename });

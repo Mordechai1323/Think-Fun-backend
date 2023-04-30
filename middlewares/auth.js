@@ -55,7 +55,6 @@ exports.getTokenFromRequest = (req) => {
 
 exports.validateHuman = async (token) => {
   const response = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`);
-  console.log(response.data.success);
   
   return response.data.success
 };
