@@ -265,9 +265,7 @@ router.put('/editPassword', auth, async (req, res) => {
   try {
     let user = await UserModel.findOne({ _id: req.tokenData._id });
     let validPassword = await bcrypt.compare(req.body.oldPassword, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ err: 'Password not match' });
-    }
+    if (!validPassword) return res.sendStatus(401)
     req.body.password = await bcrypt.hash(req.body.password, 10);
     user = await UserModel.updateOne({ _id: req.tokenData._id }, req.body);
     res.json(user);
